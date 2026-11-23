@@ -463,11 +463,15 @@
         };
         timeline.push(colorvision);
 
+        // old osf pipe = pdJmMPApoda9
+
+        //zenodo pipe = 8oDOf9IExxfb
+
         //save the data
         const save_data = {
             type: jsPsychPipe,
             action: "save",
-            experiment_id: "pdJmMPApoda9",
+            experiment_id: "8oDOf9IExxfb",
             filename: filename,
             wait_message: "Please wait while the next page loads.",
             data_string: () => jsPsych.data.get().csv()
