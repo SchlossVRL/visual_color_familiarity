@@ -66,15 +66,15 @@
             }
             const csvText = await response.text();
             const lines = csvText.split('\n');
-            
+
             // Find the header row and get the index of color_hex column
             const headers = lines[0].split(',');
             const colorHexIndex = headers.findIndex(h => h.trim() === 'color_hex');
-            
+
             if (colorHexIndex === -1) {
                 throw new Error("Could not find 'color_hex' column in CSV");
             }
-            
+
             // Extract color_hex values (skip header row)
             for (let i = 1; i < lines.length; i++) {
                 if (lines[i].trim()) {
@@ -87,7 +87,7 @@
             }
             console.log("Loaded colors from CSV:", colors);
             console.log("Total colors loaded:", colors.length);
-            
+
             if (colors.length === 0) {
                 throw new Error("No colors found in CSV");
             }
@@ -332,14 +332,131 @@
             }
         }
 
-            console.log("Unique colors loaded from CSV:", colors);
-            console.log("Total unique colors loaded:", colors.length);
+        console.log("Unique colors loaded from CSV:", colors);
+        console.log("Total unique colors loaded:", colors.length);
 
-        //Exit fullscreen
-        timeline.push({
-            type: jsPsychFullscreen,
-            fullscreen_mode: false
-        })
+        //--------------------------------------------------
+        // Ishihara color vision check //
+        //--------------------------------------------------
+
+        var ishihara_instructions = {
+            type: jsPsychHtmlKeyboardResponse,
+            stimulus:
+                "<p>Good job! You have finished the task. Next, you will see an image on the screen." +
+                "<br>If you see a number in the image, please carefully type that number in the box.</p>" +
+                "<p>If you do not see a number in the image, please type 'None' in the box." +
+                "<br>This part of the experiment will take about 2 minutes.</p>" +
+                "<p>Please press the left or right arrow keys to begin.</p>",
+            post_trial_gap: 500,
+            choices: ["ArrowLeft", "ArrowRight"]
+        };
+        timeline.push(ishihara_instructions);
+
+
+        //random function
+        function getRandomIntInclusive(min, max) {
+            min = Math.ceil(min);
+            max = Math.floor(max);
+            return Math.floor(Math.random() * (max - min + 1));
+        }
+
+
+        //Loop to present 11 ishihara plates of a unique type
+        var plateCounter = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        var numPlates = 11;
+        for (plateNum = 0; plateNum < numPlates;) {
+
+
+            //Randomly select which plate to present
+            var whichPlate = getRandomIntInclusive(0, 10);
+
+            //always present this plate first
+            if (plateNum == 0) {
+                whichPlate = 0;
+                answer = "12";
+            }
+
+            // specify correct answer
+            if (whichPlate == 1) {
+                answer = "8";
+            } else if (whichPlate == 2) {
+                answer = "5";
+            } else if (whichPlate == 3) {
+                answer = "29";
+            } else if (whichPlate == 4) {
+                answer = "74";
+            } else if (whichPlate == 5) {
+                answer = "7";
+            } else if (whichPlate == 6) {
+                answer = "45";
+            } else if (whichPlate == 7) {
+                answer = "2";
+            } else if (whichPlate == 8) {
+                answer = "16";
+            } else if (whichPlate == 9) {
+                answer = "35";
+            } else if (whichPlate == 10) {
+                answer = "96";
+            }
+
+            //Check to ensure this plate not previously presented
+            if (plateCounter[whichPlate] == 0) {
+
+                //Present trial
+                var ishihara_plate = {
+                    type: jsPsychSurveyHtmlForm,
+                    preamble: '<div><p style="font-size:25px">Carefully type what number you see using digits (e.g., if you see 100, type "100" not "one hundred").<br>If you do not see a number, type "None".\
+                            <br></p></div><div ><img src="images/ishihara/ishihara-' + whichPlate + '.png" alt="Ishihara Plate" style="height:500px"></div>',
+                    html: '<div><p><input name="number" type="text" autofocus /></p></div>',
+                    on_load: function () {
+                        const field = document.querySelector('input[name="number"]');
+                        if (field) field.focus();
+                    },
+                    // trial_duration: 5000,
+                    post_trial_gap: 250,
+                    data: { ishihara_plate: whichPlate, correct_response: answer }
+                };
+                timeline.push(ishihara_plate)
+                plateCounter[whichPlate] = 1;
+                plateNum++
+            }
+        }
+
+        /// display the data on screen
+        console.log(jsPsych.data.get());
+        // Color Vision check //
+        var colorvision = {
+            type: jsPsychSurveyMultiChoice,
+            questions: [
+                {
+                    prompt: "Do you have difficulty seeing colors or noticing differences<br>between colors compared to the average person?",
+                    options: ["Yes", "No"],
+                    horizontal: false,
+                    required: true,
+                    name: 'colorDifficulty'
+                },
+
+                {
+                    prompt: "Do you consider yourself to be colorblind? ",
+                    options: ["Yes", "No"],
+                    horizontal: false,
+                    required: true,
+                    name: 'colorBlind'
+                },
+
+                {
+                    prompt: "What device did you use to complete this experiment?",
+                    options: ["Computer", "Tablet", "Phone", "Other"],
+                    horizontal: false,
+                    required: true,
+                    name: 'device'
+                }
+            ],
+            preamble: "",
+            button_label: "Done",
+            randomize_question_order: false
+        };
+        timeline.push(colorvision);
 
         //save the data
         const save_data = {
@@ -351,6 +468,13 @@
             data_string: () => jsPsych.data.get().csv()
         };
         timeline.push(save_data);
+
+        //Exit fullscreen
+        timeline.push({
+            type: jsPsychFullscreen,
+            fullscreen_mode: false
+        })
+
 
         var debrief_script = {
             type: jsPsychHtmlKeyboardResponse,
@@ -375,4 +499,5 @@
     }
     startExperiment();
 </script>
+
 </html>
