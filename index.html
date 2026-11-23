@@ -305,6 +305,10 @@
             on_load: function () {
                 const reqField = document.querySelector('input[name="resp1"]');
                 const btn = document.querySelector(".jspsych-btn");
+                // Automatically place the cursor in the first text box
+                //reqField.focus();
+
+                // Disable Next until the first response is entered
                 btn.disabled = true;
                 reqField.addEventListener("input", () => {
                     btn.disabled = !(reqField.value.trim().length > 0);
@@ -317,7 +321,7 @@
 
         var iti = {
             type: jsPsychHtmlKeyboardResponse,
-            stimulus: '<div style="font-size: 40px;">+</div>',
+            stimulus: '<div style="font-size: 40px;"></div>',
             choices: "NO_KEYS",
             trial_duration: 500
         };
